@@ -65,7 +65,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   const connect = useCallback(() => {
     getStacksModule().then(({ mod, userSession }) => {
-      const authenticateFn = mod.authenticate || mod.default?.authenticate;
+      const authenticateFn = mod.showConnect || mod.authenticate || mod.default?.authenticate;
       console.log('Wallet Auth Firing: ', typeof authenticateFn);
       try {
         authenticateFn({
