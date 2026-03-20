@@ -65,9 +65,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   const connect = useCallback(() => {
     getStacksModule().then(({ mod, userSession }) => {
-      const authenticate = mod.authenticate || mod.default?.authenticate;
+      const authenticateFn = mod.authenticate || mod.default?.authenticate;
+      console.log('Wallet Auth Firing: ', typeof authenticateFn);
       try {
-        const authResult = authenticate({
+        authenticateFn({
           appDetails: {
             name: 'Stacks Memer',
             icon: typeof window !== 'undefined' ? window.location.origin + '/logo.svg' : '',
@@ -75,20 +76,16 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           redirectTo: '/',
           userSession,
           onFinish: () => {
+             console.log('Auth Finished Success');
             const userData = userSession.loadUserData();
             setAddress(userData.profile?.stxAddress?.mainnet || null);
           },
           onCancel: () => {
-             // Handle cancellation silently.
+             console.log('User natively cancelled the prompt.');
           }
         });
-        
-        // NextJS sometimes intercepts unhandled rejections from the RPC layer; catch them aggressively.
-        if (authResult instanceof Promise) {
-          authResult.catch(() => {});
-        }
       } catch (err) {
-        console.log('Wallet popup closed synchronously.');
+        console.error('Wallet connection fatal exception: ', err);
       }
     });
   }, []);
