@@ -101,10 +101,15 @@ export default function AnalyticsPage() {
                     <td className="py-3 px-3 text-muted-foreground font-bold">#{i + 1}</td>
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold"
-                          style={{ background: `${COLORS[i%COLORS.length]}22`, color: COLORS[i%COLORS.length] }}>
-                          {t.symbol?.substring(0, 2)}
-                        </div>
+                        {t.imageUri ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={t.imageUri} alt={t.symbol} className="w-7 h-7 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+                        ) : (
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold"
+                            style={{ background: `${COLORS[i%COLORS.length]}22`, color: COLORS[i%COLORS.length] }}>
+                            {t.symbol?.substring(0, 2)}
+                          </div>
+                        )}
                         <div>
                           <div className="font-bold text-foreground">{t.symbol}</div>
                           <div className="text-[10px] text-muted-foreground">{t.name}</div>

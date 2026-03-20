@@ -21,28 +21,31 @@ const WalletContext = createContext<WalletContextType>({
   disconnect: () => {},
 });
 
-// Dynamically import @stacks/connect ONLY on client side to avoid SSR crashes
+let cachedMod: any = null;
+let cachedSession: any = null;
+
 async function getStacksModule() {
+  if (cachedMod && cachedSession) {
+    return { mod: cachedMod, userSession: cachedSession };
+  }
   const mod = await import('@stacks/connect');
   const appConfig = new mod.AppConfig(['store_write', 'publish_data']);
   const userSession = new mod.UserSession({ appConfig });
+  cachedMod = mod;
+  cachedSession = userSession;
   return { mod, appConfig, userSession };
 }
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
   const [balances, setBalances] = useState<WalletBalance | null>(null);
-  const [stacksReady, setStacksReady] = useState(false);
-  const [userSessionRef, setUserSessionRef] = useState<any>(null);
 
   // Load Stacks module on client mount
   useEffect(() => {
     getStacksModule().then(({ userSession }) => {
-      setUserSessionRef(userSession);
-      setStacksReady(true);
       if (userSession.isUserSignedIn()) {
         const userData = userSession.loadUserData();
-        setAddress(userData.profile.stxAddress.mainnet);
+        setAddress(userData.profile?.stxAddress?.mainnet || null);
       }
     });
   }, []);
@@ -61,30 +64,42 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, [address]);
 
   const connect = useCallback(() => {
-    if (!stacksReady) return;
     getStacksModule().then(({ mod, userSession }) => {
-      mod.showConnect({
-        appDetails: {
-          name: 'Stacks Memer',
-          icon: typeof window !== 'undefined' ? window.location.origin + '/logo.svg' : '',
-        },
-        redirectTo: '/',
-        onFinish: () => {
-          const userData = userSession.loadUserData();
-          setAddress(userData.profile.stxAddress.mainnet);
-        },
-        userSession,
-      });
+      const authenticate = mod.authenticate || mod.default?.authenticate;
+      try {
+        const authResult = authenticate({
+          appDetails: {
+            name: 'Stacks Memer',
+            icon: typeof window !== 'undefined' ? window.location.origin + '/logo.svg' : '',
+          },
+          redirectTo: '/',
+          userSession,
+          onFinish: () => {
+            const userData = userSession.loadUserData();
+            setAddress(userData.profile?.stxAddress?.mainnet || null);
+          },
+          onCancel: () => {
+             // Handle cancellation silently.
+          }
+        });
+        
+        // NextJS sometimes intercepts unhandled rejections from the RPC layer; catch them aggressively.
+        if (authResult instanceof Promise) {
+          authResult.catch(() => {});
+        }
+      } catch (err) {
+        console.log('Wallet popup closed synchronously.');
+      }
     });
-  }, [stacksReady]);
+  }, []);
 
   const disconnect = useCallback(() => {
-    if (userSessionRef) {
-      userSessionRef.signUserOut();
-    }
-    setAddress(null);
-    setBalances(null);
-  }, [userSessionRef]);
+    getStacksModule().then(({ userSession }) => {
+      userSession.signUserOut();
+      setAddress(null);
+      setBalances(null);
+    });
+  }, []);
 
   const stxBalance = balances
     ? (parseInt(balances.stx.balance) / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 2 })

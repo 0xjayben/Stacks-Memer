@@ -36,9 +36,14 @@ export default function TokenDetailPage({ params }: { params: Promise<{ id: stri
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <div className="flex items-center gap-3 flex-1">
-          <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-500 font-bold text-sm">
-            {sym.substring(0, 2)}
-          </div>
+          {token?.imageUri ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={token.imageUri} alt={sym} className="w-10 h-10 rounded-full bg-card" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center text-pink-500 font-bold text-sm">
+              {sym.substring(0, 2)}
+            </div>
+          )}
           <div>
             <h1 className="text-2xl font-bold">{name}</h1>
             <p className="text-xs text-muted-foreground font-mono">{contractId}</p>

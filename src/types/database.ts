@@ -44,6 +44,44 @@ export interface Database {
           votes_count?: number
         }
       }
+      campaigns: {
+        Row: {
+          id: string
+          title: string
+          description: string
+          target_stx: number
+          raised_stx: number
+          creator_address: string
+          status: 'active' | 'completed' | 'failed'
+          created_at: string
+          ends_at: string
+          image_url: string | null
+        }
+        Insert: {
+          id?: string
+          title: string
+          description: string
+          target_stx: number
+          raised_stx?: number
+          creator_address: string
+          status?: 'active' | 'completed' | 'failed'
+          created_at?: string
+          ends_at: string
+          image_url?: string | null
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string
+          target_stx?: number
+          raised_stx?: number
+          creator_address?: string
+          status?: 'active' | 'completed' | 'failed'
+          created_at?: string
+          ends_at?: string
+          image_url?: string | null
+        }
+      }
       votes: {
         Row: {
           id: string

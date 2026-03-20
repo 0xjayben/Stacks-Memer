@@ -106,12 +106,17 @@ function DiscoverContent() {
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
-                      style={{ background: `${color}22`, color }}
-                    >
-                      {t.symbol?.substring(0, 2) || '??'}
-                    </div>
+                    {t.imageUri ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={t.imageUri} alt={t.symbol} className="w-10 h-10 rounded-full" onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+                    ) : (
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold"
+                        style={{ background: `${color}22`, color }}
+                      >
+                        {t.symbol?.substring(0, 2) || '??'}
+                      </div>
+                    )}
                     <div>
                       <div className="font-bold text-foreground">{t.name}</div>
                       <div className="text-xs text-muted-foreground">${t.symbol}</div>

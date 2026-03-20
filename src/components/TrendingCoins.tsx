@@ -38,18 +38,23 @@ export function TrendingCoins() {
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-card/80 transition-colors cursor-pointer group"
           >
             <span className="text-xs font-bold text-muted-foreground w-6">#{i + 1}</span>
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 border-2 border-transparent"
-              style={{
-                background: `${COLORS[i % COLORS.length]}22`,
-                color: COLORS[i % COLORS.length],
-                borderImage: 'linear-gradient(135deg, #ed49a9, #c084fc, #60a5fa) 1',
-                borderImageSlice: 1,
-                borderRadius: '50%',
-              }}
-            >
-              {t.symbol?.substring(0, 2)}
-            </div>
+            {t.imageUri ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={t.imageUri} alt={t.symbol} className="w-8 h-8 rounded-full border-2 border-transparent" style={{ borderImage: 'linear-gradient(135deg, #ed49a9, #c084fc, #60a5fa) 1', borderImageSlice: 1, borderRadius: '50%' }} onError={(e) => { (e.target as HTMLImageElement).style.display='none'; }} />
+            ) : (
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 border-2 border-transparent"
+                style={{
+                  background: `${COLORS[i % COLORS.length]}22`,
+                  color: COLORS[i % COLORS.length],
+                  borderImage: 'linear-gradient(135deg, #ed49a9, #c084fc, #60a5fa) 1',
+                  borderImageSlice: 1,
+                  borderRadius: '50%',
+                }}
+              >
+                {t.symbol?.substring(0, 2)}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="font-bold text-sm text-foreground truncate">{t.symbol}</div>
               <div className="text-xs text-muted-foreground truncate">{t.name}</div>
