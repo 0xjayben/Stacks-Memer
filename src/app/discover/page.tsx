@@ -1,6 +1,7 @@
 'use client';
 
 import { useTokens } from '@/hooks/useTokens';
+import { useVote } from '@/hooks/useVote';
 import { useState, useEffect, Suspense } from 'react';
 import { Search, Filter, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
@@ -19,6 +20,7 @@ function DiscoverContent() {
   }, [q]);
 
   const { tokens, loading, refetch } = useTokens(search);
+  const { vote, votedTokens, loadingToken, isConnected } = useVote();
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6">
@@ -65,15 +67,27 @@ function DiscoverContent() {
         </div>
         <div className="p-4 rounded-xl bg-[#131316] border border-border">
           <div className="text-xs text-muted-foreground mb-1">Avg Market Cap</div>
-          <div className="text-xl font-bold">$178.4K</div>
+          <div className="text-xl font-bold">
+            {tokens.length > 0
+              ? `$${(tokens.reduce((s, t) => s + t.marketCap, 0) / tokens.length / 1000).toFixed(1)}K`
+              : '—'}
+          </div>
         </div>
         <div className="p-4 rounded-xl bg-[#131316] border border-border">
           <div className="text-xs text-muted-foreground mb-1">Top Gainer</div>
-          <div className="text-xl font-bold text-green-500">+45.2%</div>
+          <div className="text-xl font-bold text-green-500">
+            {tokens.length > 0
+              ? `+${Math.max(...tokens.map(t => t.priceChange24h)).toFixed(1)}%`
+              : '—'}
+          </div>
         </div>
         <div className="p-4 rounded-xl bg-[#131316] border border-border">
-          <div className="text-xs text-muted-foreground mb-1">Active Now</div>
-          <div className="text-xl font-bold">1,284</div>
+          <div className="text-xs text-muted-foreground mb-1">Total Volume</div>
+          <div className="text-xl font-bold">
+            {tokens.length > 0
+              ? `$${(tokens.reduce((s, t) => s + t.volume24h, 0) / 1_000_000).toFixed(1)}M`
+              : '—'}
+          </div>
         </div>
       </div>
 
@@ -138,9 +152,32 @@ function DiscoverContent() {
                   </div>
                 </div>
 
-                <div className="text-[11px] text-muted-foreground font-mono truncate">
+                <div className="text-[11px] text-muted-foreground font-mono truncate mb-3">
                   {t.contractId}
                 </div>
+
+                {/* Vote Button */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    vote(t.contractId, t.contractId);
+                  }}
+                  disabled={!isConnected || votedTokens.has(t.contractId) || loadingToken === t.contractId}
+                  className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-bold transition-all ${
+                    votedTokens.has(t.contractId)
+                      ? 'bg-green-500/10 text-green-500 border border-green-500/20 cursor-default'
+                      : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-primary-foreground active:scale-95'
+                  } disabled:opacity-50`}
+                >
+                  {loadingToken === t.contractId ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : votedTokens.has(t.contractId) ? (
+                    <>✓ Voted</>
+                  ) : (
+                    <>🔥 Vote</>
+                  )}
+                </button>
               </Link>
             );
           })}

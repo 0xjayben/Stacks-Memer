@@ -2,14 +2,23 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { fetchAddressBalances, type WalletBalance } from '@/lib/api';
+import { signAndBroadcast, type ContractCallOptions } from '@/lib/stacks-transactions';
+
+interface PendingTx {
+  txId: string;
+  status: 'pending' | 'success' | 'failed';
+  functionName: string;
+}
 
 interface WalletContextType {
   address: string | null;
   isConnected: boolean;
   balances: WalletBalance | null;
   stxBalance: string;
+  pendingTx: PendingTx | null;
   connect: () => void;
   disconnect: () => void;
+  signContractCall: (options: ContractCallOptions) => Promise<string | null>;
 }
 
 const WalletContext = createContext<WalletContextType>({
@@ -17,8 +26,10 @@ const WalletContext = createContext<WalletContextType>({
   isConnected: false,
   balances: null,
   stxBalance: '0',
+  pendingTx: null,
   connect: () => {},
   disconnect: () => {},
+  signContractCall: async () => null,
 });
 
 let cachedMod: any = null;
@@ -39,6 +50,7 @@ async function getStacksModule() {
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
   const [balances, setBalances] = useState<WalletBalance | null>(null);
+  const [pendingTx, setPendingTx] = useState<PendingTx | null>(null);
 
   // Load Stacks module on client mount
   useEffect(() => {
@@ -95,6 +107,33 @@ export function WalletProvider({ children }: { children: ReactNode }) {
       userSession.signUserOut();
       setAddress(null);
       setBalances(null);
+      setPendingTx(null);
+    });
+  }, []);
+
+  // Sign and broadcast a contract call via the wallet popup
+  const signContractCall = useCallback(async (options: ContractCallOptions): Promise<string | null> => {
+    return new Promise((resolve) => {
+      setPendingTx({ txId: '', status: 'pending', functionName: options.functionName });
+
+      signAndBroadcast({
+        ...options,
+        onFinish: (data) => {
+          setPendingTx({ txId: data.txId, status: 'success', functionName: options.functionName });
+          // Auto-clear after 10 seconds
+          setTimeout(() => setPendingTx(null), 10_000);
+          resolve(data.txId);
+        },
+        onCancel: () => {
+          setPendingTx(null);
+          resolve(null);
+        },
+      }).catch((err) => {
+        console.error('signContractCall error:', err);
+        setPendingTx({ txId: '', status: 'failed', functionName: options.functionName });
+        setTimeout(() => setPendingTx(null), 5_000);
+        resolve(null);
+      });
     });
   }, []);
 
@@ -103,7 +142,16 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     : '0';
 
   return (
-    <WalletContext.Provider value={{ address, isConnected: !!address, balances, stxBalance, connect, disconnect }}>
+    <WalletContext.Provider value={{
+      address,
+      isConnected: !!address,
+      balances,
+      stxBalance,
+      pendingTx,
+      connect,
+      disconnect,
+      signContractCall,
+    }}>
       {children}
     </WalletContext.Provider>
   );

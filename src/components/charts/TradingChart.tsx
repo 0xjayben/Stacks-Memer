@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface DataPoint {
   time: string;   // YYYY-MM-DD
@@ -15,6 +15,7 @@ interface TradingChartProps {
 }
 
 export function TradingChart({ data, color = '#ec4899', height = 280, showGrid = true }: TradingChartProps) {
+  const [range, setRange] = useState<'1W' | '1M' | 'ALL'>('1M');
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<any>(null);
 
@@ -22,6 +23,17 @@ export function TradingChart({ data, color = '#ec4899', height = 280, showGrid =
     if (!containerRef.current || data.length === 0) return;
 
     let cancelled = false;
+    
+    // Filter data based on selected range
+    const now = new Date();
+    const filteredData = data.filter(d => {
+      const dDate = new Date(d.time);
+      if (range === '1W') return (now.getTime() - dDate.getTime()) <= 7 * 24 * 60 * 60 * 1000;
+      if (range === '1M') return (now.getTime() - dDate.getTime()) <= 30 * 24 * 60 * 60 * 1000;
+      return true;
+    });
+
+    if (filteredData.length === 0) return;
 
     import('lightweight-charts').then((mod) => {
       if (cancelled || !containerRef.current) return;
@@ -69,7 +81,7 @@ export function TradingChart({ data, color = '#ec4899', height = 280, showGrid =
         priceFormat: { type: 'price' as const, precision: 4, minMove: 0.0001 },
       });
 
-      const formatted = data.map((d) => ({
+      const formatted = filteredData.map((d) => ({
         time: d.time as any,
         value: d.value,
       }));
@@ -96,9 +108,28 @@ export function TradingChart({ data, color = '#ec4899', height = 280, showGrid =
         chartRef.current = null;
       }
     };
-  }, [data, color, height, showGrid]);
+  }, [data, color, height, showGrid, range]);
 
-  return <div ref={containerRef} className="w-full" style={{ height }} />;
+  return (
+    <div className="relative w-full">
+      <div className="absolute top-4 right-4 z-10 flex gap-2">
+        {['1W', '1M', 'ALL'].map((r) => (
+          <button
+            key={r}
+            onClick={() => setRange(r as any)}
+            className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+              range === r 
+                ? 'bg-white/10 text-white' 
+                : 'text-zinc-500 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+      <div ref={containerRef} className="w-full" style={{ height }} />
+    </div>
+  );
 }
 
 // Generate mock price history data for demonstration

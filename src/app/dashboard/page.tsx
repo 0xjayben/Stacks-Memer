@@ -29,10 +29,10 @@ export default function Dashboard() {
   const { data: chartData, loading: chartLoading } = useChart(topToken?.contractId || null);
 
   const stats = [
-    { title: 'Trending Tokens', value: trending.length ? `${trending.length}` : '...', change: '+23 from yesterday', icon: TrendingUp, iconColor: 'text-pink-500' },
-    { title: 'Total Volume', value: trending.length ? `$${(trending.reduce((s, t) => s + t.volume24h, 0) / 1_000_000).toFixed(1)}M` : '...', change: '+12.5% from yesterday', icon: DollarSign, iconColor: 'text-cyan-500' },
-    { title: 'Active Holders', value: trending.length ? `${(trending.reduce((s, t) => s + t.holders, 0) / 1000).toFixed(1)}K` : '...', change: '+456 new today', icon: Users, iconColor: 'text-green-500' },
-    { title: 'Success Rate', value: '73.2%', change: '+2.1% improvement', icon: CheckCircle2, iconColor: 'text-green-500', isPill: true },
+    { title: 'Trending Tokens', value: trending.length ? `${trending.length}` : '...', change: '', icon: TrendingUp, iconColor: 'text-pink-500' },
+    { title: 'Total Volume', value: trending.length ? `$${(trending.reduce((s, t) => s + t.volume24h, 0) / 1_000_000).toFixed(1)}M` : '...', change: '', icon: DollarSign, iconColor: 'text-cyan-500' },
+    { title: 'Active Holders', value: trending.length ? `${(trending.reduce((s, t) => s + t.holders, 0) / 1000).toFixed(1)}K` : '...', change: '', icon: Users, iconColor: 'text-green-500' },
+    { title: 'Top Gainer', value: trending.length ? `+${Math.max(...trending.map(t => t.priceChange24h)).toFixed(1)}%` : '...', change: '', icon: CheckCircle2, iconColor: 'text-green-500', isPill: true },
   ];
 
   return (
@@ -61,7 +61,6 @@ export default function Dashboard() {
                 )}
               </div>
               <div className="text-3xl font-bold mb-1 text-foreground">{stat.value}</div>
-              <div className="text-xs font-medium text-green-500">{stat.change}</div>
             </div>
           );
         })}

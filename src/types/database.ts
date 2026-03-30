@@ -102,6 +102,79 @@ export interface Database {
           created_at?: string
         }
       }
+      users: {
+        Row: {
+          id: string
+          wallet_address: string
+          username: string | null
+          avatar_url: string | null
+          created_at: string
+          banned: boolean
+        }
+        Insert: {
+          id?: string
+          wallet_address: string
+          username?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          banned?: boolean
+        }
+        Update: {
+          id?: string
+          wallet_address?: string
+          username?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          banned?: boolean
+        }
+      }
+      notifications: {
+        Row: {
+          id: string
+          wallet_address: string
+          type: 'vote' | 'milestone' | 'alert'
+          title: string
+          message: string
+          read: boolean
+          created_at: string
+          link: string | null
+        }
+        Insert: {
+          id?: string
+          wallet_address: string
+          type: 'vote' | 'milestone' | 'alert'
+          title: string
+          message: string
+          read?: boolean
+          created_at?: string
+          link?: string | null
+        }
+        Update: {
+          id?: string
+          wallet_address?: string
+          type?: 'vote' | 'milestone' | 'alert'
+          title?: string
+          message?: string
+          read?: boolean
+          created_at?: string
+          link?: string | null
+        }
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      increment_token_votes: {
+        Args: { row_id: string }
+        Returns: undefined
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }

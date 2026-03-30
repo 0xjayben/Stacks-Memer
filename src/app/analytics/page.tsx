@@ -28,10 +28,10 @@ export default function AnalyticsPage() {
       {/* Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { icon: TrendingUp, color: 'text-pink-500', label: 'Trending Tokens', value: `${trending.length || '...'}`, sub: '+23 from yesterday' },
-          { icon: DollarSign, color: 'text-cyan-500', label: 'Total Volume', value: trending.length ? `$${(trending.reduce((s,t)=>s+t.volume24h,0)/1e6).toFixed(1)}M` : '...', sub: '+12.5% from yesterday' },
-          { icon: Users, color: 'text-green-500', label: 'Active Holders', value: trending.length ? `${(trending.reduce((s,t)=>s+t.holders,0)/1000).toFixed(1)}K` : '...', sub: '+456 new today' },
-          { icon: CheckCircle2, color: 'text-green-500', label: 'Success Rate', value: '73.2%', sub: '+2.1% improvement', isPill: true },
+          { icon: TrendingUp, color: 'text-pink-500', label: 'Trending Tokens', value: `${trending.length || '...'}`, sub: '' },
+          { icon: DollarSign, color: 'text-cyan-500', label: 'Total Volume', value: trending.length ? `$${(trending.reduce((s,t)=>s+t.volume24h,0)/1e6).toFixed(1)}M` : '...', sub: '' },
+          { icon: Users, color: 'text-green-500', label: 'Active Holders', value: trending.length ? `${(trending.reduce((s,t)=>s+t.holders,0)/1000).toFixed(1)}K` : '...', sub: '' },
+          { icon: CheckCircle2, color: 'text-green-500', label: 'Top Gainer', value: trending.length ? `+${Math.max(...trending.map(t => t.priceChange24h)).toFixed(1)}%` : '...', sub: '', isPill: true },
         ].map((s, i) => {
           const Icon = s.icon;
           return (
@@ -44,7 +44,6 @@ export default function AnalyticsPage() {
                 )}
               </div>
               <div className="text-3xl font-bold mb-1">{s.value}</div>
-              <div className="text-xs text-green-500">{s.sub}</div>
             </div>
           );
         })}
@@ -133,38 +132,25 @@ export default function AnalyticsPage() {
       {/* Insights Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="p-5 rounded-2xl bg-[#131316] border border-border">
-          <h4 className="font-bold mb-4">Market Sentiment</h4>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground w-14">Bullish</span>
-              <div className="flex-1 h-2 bg-card rounded-full overflow-hidden"><div className="h-full bg-green-500 rounded-full" style={{width:'75%'}} /></div>
-              <span className="text-xs text-green-500 font-bold w-10 text-right">75%</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground w-14">Bearish</span>
-              <div className="flex-1 h-2 bg-card rounded-full overflow-hidden"><div className="h-full bg-red-500 rounded-full" style={{width:'25%'}} /></div>
-              <span className="text-xs text-red-500 font-bold w-10 text-right">25%</span>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-bold">Market Sentiment</h4>
+            <span className="text-[10px] text-muted-foreground px-2 py-0.5 rounded-full border border-border">Coming Soon</span>
           </div>
+          <p className="text-sm text-muted-foreground">Sentiment analysis will be available once sufficient voting data has been collected.</p>
         </div>
         <div className="p-5 rounded-2xl bg-[#131316] border border-border">
-          <h4 className="font-bold mb-4">Top Categories</h4>
-          <div className="space-y-2">
-            {[{n:'Memes',p:'45%',c:'#ec4899'},{n:'Gaming',p:'28%',c:'#60a5fa'},{n:'DeFi',p:'18%',c:'#22d3a4'},{n:'Others',p:'9%',c:'#6366f1'}].map(cat => (
-              <div key={cat.n} className="flex items-center justify-between">
-                <span className="text-sm">{cat.n}</span>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{background:`${cat.c}25`,color:cat.c}}>{cat.p}</span>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-bold">Top Categories</h4>
+            <span className="text-[10px] text-muted-foreground px-2 py-0.5 rounded-full border border-border">Coming Soon</span>
           </div>
+          <p className="text-sm text-muted-foreground">Category breakdown will be enabled as tokens are tagged and classified by the community.</p>
         </div>
         <div className="p-5 rounded-2xl bg-[#131316] border border-border">
-          <h4 className="font-bold mb-4">Performance Metrics</h4>
-          <div className="space-y-2.5 text-sm">
-            {[['Avg Daily Volume','$2.1M'],['Token Launch Rate','34/day'],['Success Rate','73.2%'],['Avg Hold Time','4.2 days']].map(([k,v]) => (
-              <div key={k} className="flex justify-between"><span className="text-muted-foreground">{k}</span><span className="font-bold">{v}</span></div>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-bold">Performance Metrics</h4>
+            <span className="text-[10px] text-muted-foreground px-2 py-0.5 rounded-full border border-border">Coming Soon</span>
           </div>
+          <p className="text-sm text-muted-foreground">Detailed performance metrics will be computed from historical trading and voting activity.</p>
         </div>
       </div>
     </div>

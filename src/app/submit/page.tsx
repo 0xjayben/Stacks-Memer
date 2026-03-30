@@ -9,6 +9,8 @@ export default function Submit() {
   const { address, isConnected, connect } = useWallet()
   const [tab, setTab] = useState<'token' | 'campaign'>('campaign')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
 
   // Token Form State
   const [tokenForm, setTokenForm] = useState({ name: '', symbol: '', contractAddress: '', description: '' })
@@ -20,22 +22,44 @@ export default function Submit() {
     e.preventDefault()
     if (!isConnected || !address) return
     setIsSubmitting(true)
-    
-    // @ts-ignore
-    const { error } = await supabase.from('tokens').insert({
-      name: tokenForm.name,
-      symbol: tokenForm.symbol,
-      contract_address: tokenForm.contractAddress,
-      description: tokenForm.description,
-      creator_wallet: address,
-      votes_count: 0
-    })
 
-    setIsSubmitting(false)
-    if (error) alert("Error submitting token: " + error.message)
-    else {
-      alert("Token securely submitted and tied to your hardware credential!")
-      setTokenForm({ name: '', symbol: '', contractAddress: '', description: '' })
+    try {
+      // 1. Upload logo if provided
+      let logoUrl: string | null = null
+      if (logoFile) {
+        const formData = new FormData()
+        formData.append('file', logoFile)
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData })
+        const uploadData = await uploadRes.json()
+        if (uploadRes.ok && uploadData.url) {
+          logoUrl = uploadData.url
+        }
+      }
+
+      // 2. Insert token record
+      const { error } = await (supabase.from('tokens') as any).insert({
+        name: tokenForm.name,
+        symbol: tokenForm.symbol,
+        contract_address: tokenForm.contractAddress,
+        description: tokenForm.description,
+        logo_url: logoUrl,
+        creator_wallet: address,
+        votes_count: 0
+      })
+
+      if (error) {
+        alert('Error submitting token: ' + error.message)
+      } else {
+        alert('Token submitted successfully!')
+        setTokenForm({ name: '', symbol: '', contractAddress: '', description: '' })
+        setLogoFile(null)
+        setLogoPreview(null)
+      }
+    } catch (err) {
+      alert('Submission failed. Try again.')
+      console.error(err)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -57,8 +81,8 @@ export default function Submit() {
       ends_at: endsAt.toISOString()
     }
 
-    // @ts-ignore
-    const { error } = await supabase.from('campaigns').insert(payload)
+    // @ts-ignore — campaigns table insert
+    const { error } = await (supabase.from('campaigns') as any).insert(payload)
 
     setIsSubmitting(false)
     if (error) alert("Error launching campaign: " + error.message)
@@ -130,6 +154,32 @@ export default function Submit() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Description</label>
               <textarea rows={3} value={tokenForm.description} onChange={e => setTokenForm({...tokenForm, description: e.target.value})} placeholder="Tell the community about your meme coin..." className="w-full px-4 py-3 bg-background border border-border rounded-xl focus:outline-none focus:border-primary resize-none disabled:opacity-50" disabled={!isConnected} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Token Logo</label>
+              <div className="flex items-center gap-4">
+                {logoPreview && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoPreview} alt="Logo preview" className="w-14 h-14 rounded-full object-cover border border-border" />
+                )}
+                <label className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-background border border-dashed border-border rounded-xl cursor-pointer hover:border-primary transition-colors disabled:opacity-50">
+                  <Upload className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">{logoFile ? logoFile.name : 'Choose an image...'}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={!isConnected}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        setLogoFile(file)
+                        setLogoPreview(URL.createObjectURL(file))
+                      }
+                    }}
+                  />
+                </label>
+              </div>
             </div>
             <button type="submit" disabled={isSubmitting || !isConnected} className="w-full py-4 bg-primary text-primary-foreground font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-70 transition-all">
               {isSubmitting ? <div className="w-5 h-5 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" /> : <><Rocket className="w-5 h-5" /> Launch Token Listing</>}

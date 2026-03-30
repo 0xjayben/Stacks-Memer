@@ -3,6 +3,7 @@
 import { TradingChart } from '@/components/charts/TradingChart';
 import { useChart } from '@/hooks/useChart';
 import { useTokens } from '@/hooks/useTokens';
+import { useVote } from '@/hooks/useVote';
 import { use } from 'react';
 import { ArrowLeft, ExternalLink, Copy } from 'lucide-react';
 import Link from 'next/link';
@@ -15,6 +16,7 @@ export default function TokenDetailPage({ params }: { params: Promise<{ id: stri
   const { tokens } = useTokens();
   const token = tokens.find(t => t.contractId === contractId);
   const { data: chartData, loading: chartLoading } = useChart(contractId);
+  const { vote, votedTokens, loadingToken, isConnected } = useVote();
 
   const name = token?.name || parts[1] || contractId;
   const sym = token?.symbol?.substring(0, 4).toUpperCase() || '???';
@@ -120,40 +122,41 @@ export default function TokenDetailPage({ params }: { params: Promise<{ id: stri
           )}
         </div>
 
-        {/* Buy/Sell Panel */}
+        {/* Vote + Trade Panel */}
         <div className="p-5 rounded-2xl bg-[#131316] border border-border space-y-4">
-          <h3 className="font-bold">Trade {sym}</h3>
-          <div className="flex gap-2">
-            <button className="flex-1 py-2 rounded-lg bg-green-500/10 text-green-500 font-bold text-sm border border-green-500/20 hover:bg-green-500/20 transition-colors">
-              Buy
-            </button>
-            <button className="flex-1 py-2 rounded-lg bg-red-500/10 text-red-500 font-bold text-sm border border-red-500/20 hover:bg-red-500/20 transition-colors">
-              Sell
-            </button>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Amount (STX)</label>
-            <input
-              type="number"
-              placeholder="0.00"
-              className="w-full bg-card px-3 py-2.5 rounded-lg border border-border text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-          </div>
-          <div className="grid grid-cols-4 gap-2">
-            {['25%', '50%', '75%', 'Max'].map((pct) => (
-              <button key={pct} className="py-1.5 rounded-md text-[11px] font-bold border border-border hover:bg-card transition-colors">
-                {pct}
-              </button>
-            ))}
-          </div>
-          <div className="space-y-2 text-xs text-muted-foreground">
-            <div className="flex justify-between"><span>Price</span><span className="text-foreground">${price}</span></div>
-            <div className="flex justify-between"><span>Slippage</span><span className="text-foreground">1.0%</span></div>
-            <div className="flex justify-between"><span>Est. Received</span><span className="text-foreground">0 {sym}</span></div>
-          </div>
-          <button className="w-full py-3 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm transition-colors">
-            Connect Wallet to Trade
+          <h3 className="font-bold">Community</h3>
+          
+          {/* Vote Button */}
+          <button
+            onClick={() => vote(contractId, contractId)}
+            disabled={!isConnected || votedTokens.has(contractId) || loadingToken === contractId}
+            className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${
+              votedTokens.has(contractId)
+                ? 'bg-green-500/10 text-green-500 border border-green-500/20 cursor-default'
+                : 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-primary-foreground active:scale-95'
+            } disabled:opacity-50`}
+          >
+            {loadingToken === contractId ? (
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            ) : votedTokens.has(contractId) ? (
+              <>✓ Voted</>
+            ) : !isConnected ? (
+              <>Connect Wallet to Vote</>
+            ) : (
+              <>🔥 Vote for {sym}</>
+            )}
           </button>
+
+          {/* Trade on Velar */}
+          <a
+            href={`https://app.velar.co/swap/${contractId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500/10 text-green-500 font-bold text-sm border border-green-500/20 hover:bg-green-500/20 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Trade on Velar DEX
+          </a>
 
           {/* Token Info */}
           <div className="pt-4 border-t border-border space-y-2">
