@@ -141,14 +141,18 @@ function DiscoverContent() {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mb-4">
+                <div className="grid grid-cols-3 gap-2 mb-4">
                   <div>
-                    <div className="text-[11px] text-muted-foreground mb-0.5">Market Cap</div>
-                    <div className="text-sm font-bold">{mcap}</div>
+                    <div className="text-[10px] text-muted-foreground mb-0.5">M.Cap</div>
+                    <div className="text-xs font-bold">{mcap}</div>
                   </div>
                   <div>
-                    <div className="text-[11px] text-muted-foreground mb-0.5">Holders</div>
-                    <div className="text-sm font-bold">{holders.toLocaleString()}</div>
+                    <div className="text-[10px] text-muted-foreground mb-0.5">Volume</div>
+                    <div className="text-xs font-bold">${t.volume24h > 1000 ? (t.volume24h / 1000).toFixed(1) + 'K' : t.volume24h.toFixed(0)}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-muted-foreground mb-0.5">Holders</div>
+                    <div className="text-xs font-bold">{holders.toLocaleString()}</div>
                   </div>
                 </div>
 

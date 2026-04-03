@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { fetchVelarTokens, type TokenWithPrice } from './api';
+import { fetchMarketTokens, type TokenWithPrice } from './api';
 
 export interface IndexedToken extends TokenWithPrice {
   votes: number;
@@ -7,13 +7,13 @@ export interface IndexedToken extends TokenWithPrice {
 }
 
 /**
- * Fetches tokens from both Velar (pricing/volume) and Supabase (votes),
+ * Fetches tokens from both Market provider (DexScreener) and Supabase (votes),
  * merging them together and calculating composite scores.
  */
 export async function getIndexedTokens(): Promise<IndexedToken[]> {
   try {
     // 1. Fetch market data
-    const velarTokens = await fetchVelarTokens();
+    const marketTokens = await fetchMarketTokens();
 
     // 2. Fetch community votes
     const { data: dbTokens, error } = await (supabase
@@ -30,7 +30,7 @@ export async function getIndexedTokens(): Promise<IndexedToken[]> {
     // 3. Merge and score
     const now = Date.now();
     
-    return velarTokens.map(token => {
+    return marketTokens.map((token: TokenWithPrice) => {
       const dbInfo: any = dbMap.get(token.contractId);
       const votes = dbInfo?.votes_count || 0;
       

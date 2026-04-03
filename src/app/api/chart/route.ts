@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchVelarHistoricalPrices } from '@/lib/api';
+import { fetchMarketHistoricalPrices } from '@/lib/api';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,6 +9,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Missing contractId' }, { status: 400 });
   }
 
-  const data = await fetchVelarHistoricalPrices(contractId);
+  const data = await fetchMarketHistoricalPrices(contractId);
   return NextResponse.json({ data });
 }

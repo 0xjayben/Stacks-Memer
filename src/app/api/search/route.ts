@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { fetchVelarTokens } from '@/lib/api';
+import { fetchMarketTokens } from '@/lib/api';
 
 /**
  * GET /api/search?q=query
- * Server-side search combining Supabase basic search with Velar token data.
+ * Server-side search combining Supabase basic search with Market data.
  */
 export async function GET(req: Request) {
   try {
@@ -23,12 +23,12 @@ export async function GET(req: Request) {
       .or(`name.ilike.%${query}%,symbol.ilike.%${query}%`)
       .limit(10);
 
-    // 2. We can also cross-reference Velar tokens for price/volume
-    const velarTokens = await fetchVelarTokens();
+    // 2. We can also cross-reference market tokens for price/volume
+    const marketTokens = await fetchMarketTokens();
     
     // Map db results to include market data where available
     const results = (dbData || []).map((dbToken: any) => {
-      const marketData = velarTokens.find(t => t.contractId === dbToken.contract_address);
+      const marketData = marketTokens.find(t => t.contractId === dbToken.contract_address);
       return {
         contractId: dbToken.contract_address,
         name: dbToken.name,

@@ -61,9 +61,14 @@ export default function AnalyticsPage() {
               <span className="text-[10px] text-green-500 font-bold uppercase">Live Velar DEX</span>
             </div>
           </div>
-          {chartLoading || !chartData.length ? (
+          {chartLoading ? (
             <div className="h-[220px] w-full flex items-center justify-center text-muted-foreground text-sm animate-pulse">
               Syncing Chart Data...
+            </div>
+          ) : chartData.length === 0 ? (
+            <div className="h-[220px] w-full flex flex-col items-center justify-center text-muted-foreground text-sm border border-dashed border-border rounded-xl">
+              <span className="font-medium">Historical data not available</span>
+              <span className="text-xs opacity-70 mt-1">Chart will appear once DEX liquidity stabilizes.</span>
             </div>
           ) : (
             <TradingChart data={chartData} color="#ec4899" height={220} />

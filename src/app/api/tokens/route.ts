@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
-import { fetchVelarTokens } from '@/lib/api';
+import { fetchMarketTokens } from '@/lib/api';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const search = searchParams.get('search') || '';
 
-  let tokens = await fetchVelarTokens();
+  let tokens = await fetchMarketTokens();
 
   if (search) {
     const q = search.toLowerCase();

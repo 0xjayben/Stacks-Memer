@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { fetchAddressBalances, type WalletBalance } from '@/lib/api';
 import { signAndBroadcast, type ContractCallOptions } from '@/lib/stacks-transactions';
+import { AppConfig, UserSession, showConnect } from '@stacks/connect';
 
 interface PendingTx {
   txId: string;
@@ -32,34 +33,21 @@ const WalletContext = createContext<WalletContextType>({
   signContractCall: async () => null,
 });
 
-let cachedMod: any = null;
-let cachedSession: any = null;
-
-async function getStacksModule() {
-  if (cachedMod && cachedSession) {
-    return { mod: cachedMod, userSession: cachedSession };
-  }
-  const mod = await import('@stacks/connect');
-  const appConfig = new mod.AppConfig(['store_write', 'publish_data']);
-  const userSession = new mod.UserSession({ appConfig });
-  cachedMod = mod;
-  cachedSession = userSession;
-  return { mod, appConfig, userSession };
-}
+// Use robust client-side module initialization
+const appConfig = new AppConfig(['store_write', 'publish_data']);
+const userSession = new UserSession({ appConfig });
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
   const [balances, setBalances] = useState<WalletBalance | null>(null);
   const [pendingTx, setPendingTx] = useState<PendingTx | null>(null);
 
-  // Load Stacks module on client mount
+  // Load User Data properly on mount
   useEffect(() => {
-    getStacksModule().then(({ userSession }) => {
-      if (userSession.isUserSignedIn()) {
-        const userData = userSession.loadUserData();
-        setAddress(userData.profile?.stxAddress?.mainnet || null);
-      }
-    });
+    if (userSession.isUserSignedIn()) {
+      const userData = userSession.loadUserData();
+      setAddress(userData.profile?.stxAddress?.mainnet || null);
+    }
   }, []);
 
   // Fetch balances when address changes
@@ -76,39 +64,33 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, [address]);
 
   const connect = useCallback(() => {
-    getStacksModule().then(({ mod, userSession }) => {
-      const authenticateFn = mod.showConnect || mod.authenticate || mod.default?.authenticate;
-      console.log('Wallet Auth Firing: ', typeof authenticateFn);
-      try {
-        authenticateFn({
-          appDetails: {
-            name: 'Stacks Memer',
-            icon: typeof window !== 'undefined' ? window.location.origin + '/logo.svg' : '',
-          },
-          redirectTo: '/',
-          userSession,
-          onFinish: () => {
-             console.log('Auth Finished Success');
-            const userData = userSession.loadUserData();
-            setAddress(userData.profile?.stxAddress?.mainnet || null);
-          },
-          onCancel: () => {
-             console.log('User natively cancelled the prompt.');
-          }
-        });
-      } catch (err) {
-        console.error('Wallet connection fatal exception: ', err);
-      }
-    });
+    try {
+      showConnect({
+        appDetails: {
+          name: 'Stacks Memer',
+          icon: typeof window !== 'undefined' ? window.location.origin + '/logo.svg' : '',
+        },
+        redirectTo: '/',
+        userSession,
+        onFinish: () => {
+          console.log('Wallet Context: Auth Finished Successfully');
+          const userData = userSession.loadUserData();
+          setAddress(userData.profile?.stxAddress?.mainnet || null);
+        },
+        onCancel: () => {
+          console.log('Wallet Context: User natively cancelled the prompt.');
+        }
+      });
+    } catch (err) {
+      console.error('Wallet connection fatal exception: ', err);
+    }
   }, []);
 
   const disconnect = useCallback(() => {
-    getStacksModule().then(({ userSession }) => {
-      userSession.signUserOut();
-      setAddress(null);
-      setBalances(null);
-      setPendingTx(null);
-    });
+    userSession.signUserOut();
+    setAddress(null);
+    setBalances(null);
+    setPendingTx(null);
   }, []);
 
   // Sign and broadcast a contract call via the wallet popup
